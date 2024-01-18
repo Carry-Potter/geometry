@@ -13,7 +13,7 @@ import {
 } from './utils/canvasUtils';
 
 const App = () => {
-  const [numVertices, setNumVertices] = useState(3);
+  const [numVertices, setNumVertices] = useState(0);
   const [vertices, setVertices] = useState([]);
   const [pointToCheck, setPointToCheck] = useState({ X: 0, Y: 0 });
   const [result, setResult] = useState('');
