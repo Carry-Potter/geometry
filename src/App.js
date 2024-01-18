@@ -1,4 +1,16 @@
+// App.js
 import React, { useState, useEffect, useRef } from 'react';
+import {
+  isPolygonConvex,
+  isPointInsidePolygon,
+  getCrossProduct,
+} from './utils/geometryUtils';
+import {
+  drawPolygon,
+  drawVertices,
+  drawCheckPoint,
+  clearCanvas,
+} from './utils/canvasUtils';
 
 const App = () => {
   const [numVertices, setNumVertices] = useState(3);
@@ -15,7 +27,6 @@ const App = () => {
     setVertices(newVertices);
   };
 
-
   const runProgram = () => {
     console.log('Tacka za proveru:', pointToCheck);
 
@@ -26,8 +37,6 @@ const App = () => {
     const isInsidePolygon = isPointInsidePolygon(pointToCheck, vertices);
     setIsInside(isInsidePolygon);
     setResult(isInsidePolygon ? 'Tačka je unutar mnogougla.' : 'Tačka je van mnogougla.');
-
-    
   };
 
   const drawCanvas = () => {
@@ -35,88 +44,13 @@ const App = () => {
     if (!canvas) return;
 
     const context = canvas.getContext('2d');
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    clearCanvas(context, canvas.width, canvas.height);
 
-    // Nacrtaj mnogougao
     if (numVertices > 0 && vertices.length === numVertices) {
-      context.beginPath();
-      context.moveTo(vertices[0].X, vertices[0].Y);
-      for (let i = 1; i < numVertices; i++) {
-        context.lineTo(vertices[i].X, vertices[i].Y);
-      }
-      context.closePath();
-      context.stroke();
-
-      // Nacrtaj sve tacke mnogougla
-      context.fillStyle = 'blue';
-      for (let i = 0; i < numVertices; i++) {
-        context.beginPath();
-        context.arc(vertices[i].X, vertices[i].Y, 3, 0, 2 * Math.PI);
-        context.fill();
-        context.stroke();
-      }
-
-      // Nacrtaj tacku za proveru
-      context.fillStyle = isInside ? 'green' : 'red';
-      context.beginPath();
-      context.arc(pointToCheck.X, pointToCheck.Y, 5, 0, 2 * Math.PI);
-      context.fill();
-      context.stroke();
+      drawPolygon(context, vertices);
+      drawVertices(context, vertices);
+      drawCheckPoint(context, pointToCheck, isInside);
     }
-  };
-
-  const isPolygonConvex = (polygon) => {
-    const numVertices = polygon.length;
-    if (numVertices < 3) return false;
-
-    let direction = 0;
-    for (let i = 0; i < numVertices; i++) {
-      const vertex1 = polygon[i];
-      const vertex2 = polygon[(i + 1) % numVertices];
-      const vertex3 = polygon[(i + 2) % numVertices];
-
-      const crossProduct = getCrossProduct(vertex1, vertex2, vertex3);
-
-      if (crossProduct !== 0) {
-        if (direction === 0) {
-          direction = crossProduct > 0 ? 1 : -1;
-        } else if (direction !== (crossProduct > 0 ? 1 : -1)) {
-          return false;
-        }
-      }
-    }
-    
-
-    return true;
-  };
-
-  const isPointInsidePolygon = (point, polygon) => {
-    const numVertices = polygon.length;
-    if (numVertices < 3) return false;
-
-    let isInside = false;
-    for (let i = 0, j = numVertices - 1; i < numVertices; j = i++) {
-      const xi = polygon[i].X,
-        yi = polygon[i].Y;
-      const xj = polygon[j].X,
-        yj = polygon[j].Y;
-
-      const intersect =
-        yi > point.Y !== yj > point.Y &&
-        point.X < ((xj - xi) * (point.Y - yi)) / (yj - yi) + xi;
-
-      if (intersect) {
-        isInside = !isInside;
-      }
-    }
-
-    return isInside;
-  };
-
-  const getCrossProduct = (vertex1, vertex2, vertex3) => {
-    const vector1 = { X: vertex2.X - vertex1.X, Y: vertex2.Y - vertex1.Y };
-    const vector2 = { X: vertex3.X - vertex2.X, Y: vertex3.Y - vertex2.Y };
-    return vector1.X * vector2.Y - vector1.Y * vector2.X;
   };
 
   useEffect(() => {
@@ -132,7 +66,7 @@ const App = () => {
         onChange={(e) => setNumVertices(parseInt(e.target.value))}
         placeholder="Broj temena mnogougla"
         min="1"
-        max="100"
+        max="30"
         required
       />    
        <button className ="btn2" onClick={generateVertices}><p>Generiši temena</p></button>
